@@ -29,7 +29,7 @@ fn main() {
 
          if line.contains(pw) {
            i1 := line.index(': ')? + 2
-					 i2 := line.index('failed')?
+					 i2 := line.index('failed')? - 1
 
 					 mut out := os.open_append(leaked_file)!
 					 ok := 'Leak found: ${line.substr(i1, i2)} | Password: ${pw} | Log File: ${f}'
