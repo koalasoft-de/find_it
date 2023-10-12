@@ -32,7 +32,7 @@ void read_passwords(char passwords[][MAX_LINE_LENGTH], int *password_count, cons
 // Diese Funktion durchsucht nun die Logs nach matches für den passwords-Array. Es wird die maximale Zeilenlänge festgelegt und die Anzahl der Passwörter für zu durchsuchende Durchgänge mitgeteilt.
 void search_logs(const char passwords[][MAX_LINE_LENGTH], int password_count)
 {
-  FILE *output_file = fopen("Leaks.txt", "w"); // Es wird die Datei Leaks.txt erstellt oder überschrieben und als output_file festgelegt. "w" steht hier für write.
+  FILE *output_file = fopen("leaked.txt", "w"); // Es wird die Datei leaked.txt erstellt oder überschrieben und als output_file festgelegt. "w" steht hier für write.
   if (output_file == NULL)                     // Sollte etwas schiefgehen oder die Datei nicht existieren geht es ab in den if-Block
   {
     perror("Could not open output file"); // Error wird in die Konsole geschrieben und Programm mit 1 beendet.
