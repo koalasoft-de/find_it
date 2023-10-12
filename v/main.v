@@ -5,9 +5,9 @@ const (
 )
 
 fn main() {
-  passwords := os.read_lines('./passwords.txt')!
+	passwords := os.read_lines('./passwords.txt')!
 
-  if os.exists(leaked_file) {
+	if os.exists(leaked_file) {
 		os.rm(leaked_file)!
 	}
 
@@ -22,25 +22,25 @@ fn main() {
 			continue
 		}
 
-    for {
-		  mut buffer := []u8{len: 256}
+		for {
+			mut buffer := []u8{len: 256}
 
 			if log.read_bytes_into_newline(mut buffer)! > 0 {
-     
-			  for pw in passwords {
-				  line := buffer.bytestr()
+		 
+				for pw in passwords {
+					line := buffer.bytestr()
  
-          if line.contains(pw) {
-            i1 := line.index(': ')? + 2
-  	 				i2 := line.index_after('failed', i1) - 1
+					if line.contains(pw) {
+						i1 := line.index(': ')? + 2
+		 				i2 := line.index_after('failed', i1) - 1
  
-					  res := 'Leak found: ${line.substr(i1, i2)} | Password: ${pw} | Log File: ${f}'
+						res := 'Leak found: ${line.substr(i1, i2)} | Password: ${pw} | Log File: ${f}'
 
-					  println(res)
+						println(res)
 
-					  out.writeln(res)!
-				  }
-			  }
+						out.writeln(res)!
+					}
+				}
 			} else {
 				break
 			}
