@@ -1,17 +1,18 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>  //C-Standardlibrary und ermöglich die Nutzung von "scanf()" und "printf()" (input-, output-Operationen)
+#include <stdlib.h> //Diese Library fügt viele nützliche Makros/Funktionen hinzu und erlaubt es leichter den Speicher zu verwalten (Ohne diese Lib wäre der leakCheck etwa doppelt bis dreimal so groß)
+#include <string.h> //Hiermit werden einige String-Manipulations Methoden hinzugefügt.
 
-#define MAX_PASSWORDS 1000
-#define MAX_LINE_LENGTH 1024
+#define MAX_PASSWORDS 1000   // Die maximale Anzahl von Passwoertern, welche gespeichert werden, wird "global" festgelegt. Diese Variable wird für nachfolgende Funktionen gebraucht und wird hiermit schon im Vorfeld definiert.
+#define MAX_LINE_LENGTH 1024 // Die maximale Anzahl von Chars wird pro Zeile festgelegt.
 
+// Diese Funktion kriegt den Pointer des filename übergeben und speichert die Zeilen in einem char-Array
 void read_passwords(char passwords[][MAX_LINE_LENGTH], int *password_count, const char *filename)
 {
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
+    FILE *file = fopen(filename, "r"); // Die File mit dem übergebenen Namen/Adresse wird im "read" Modus geoeffnet
+    if (file == NULL)                  // Sollte die file nicht gefunden worden sein, oder ein Fehler bei der Uebergabe passiert sein, wird ein Fehler ausgegeben.
     {
         perror("Could not open passwords file");
-        exit(1);
+        exit(1); // Es gibt eine Konvention, dass eine "0" für erfolg steht und ungleich "0" einen unerwarteten Programmausgang oder Fehler bedeutet.
     }
 
     char line[MAX_LINE_LENGTH];
