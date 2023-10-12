@@ -1,0 +1,4 @@
+Leak found: Hedy Sabu | Password: thisisunsafe | Log File: log.1.txt
+Leak found: Allianora Andi | Password: passwort123 | Log File: log.2.txt
+Leak found: Dode Col | Password: cjfeefcpjocjoef | Log File: log.3.txt
+Leak found: Danna Brelje | Password: iamking!! | Log File: log.4.txt
