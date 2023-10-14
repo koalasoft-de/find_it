@@ -13,7 +13,8 @@ fn main() {
 
 	os.create(leaked_file)!
 
-	mut out := os.open_append(leaked_file)!
+	mut out    := os.open_append(leaked_file)!
+	mut buffer := []u8{len: 256}
  
 	for f in os.ls('./')! {
 		mut log := os.open(f)!
@@ -23,8 +24,6 @@ fn main() {
 		}
 
 		for {
-			mut buffer := []u8{len: 256}
-
 			if log.read_bytes_into_newline(mut buffer)! > 0 {
 		 
 				for pw in passwords {
