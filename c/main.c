@@ -1,6 +1,7 @@
-#include <stdio.h>  //C-Standardlibrary und ermöglich die Nutzung von "scanf()" und "printf()" (input-, output-Operationen)
-#include <stdlib.h> //Diese Library fügt viele nützliche Makros/Funktionen hinzu und erlaubt es leichter den Speicher zu verwalten (Ohne diese Lib wäre der leakCheck etwa doppelt bis dreimal so groß)
-#include <string.h> //Hiermit werden einige String-Manipulations Methoden hinzugefügt.
+#include <stdio.h>   //C-Standardlibrary und ermöglich die Nutzung von "scanf()" und "printf()" (input-, output-Operationen)
+#include <stdlib.h>  //Diese Library fügt viele nützliche Makros/Funktionen hinzu und erlaubt es leichter den Speicher zu verwalten (Ohne diese Lib wäre der leakCheck etwa doppelt bis dreimal so groß)
+#include <string.h>  //Hiermit werden einige String-Manipulations Methoden hinzugefügt.
+#include <pthread.h> //Library für Threadmanipulation
 
 #define MAX_PASSWORDS 1000   // Die maximale Anzahl von Passwoertern, welche gespeichert werden, wird "global" festgelegt. Diese Variable wird für nachfolgende Funktionen gebraucht und wird hiermit schon im Vorfeld definiert.
 #define MAX_LINE_LENGTH 1024 // Die maximale Anzahl (-1) von Chars wird pro Zeile festgelegt.
@@ -18,6 +19,7 @@ void read_passwords(char passwords[][MAX_LINE_LENGTH], int *password_count, cons
   char line[MAX_LINE_LENGTH];                                                // Die maximale Char-Länge einer Line wird festgelegt mit dem definierten Wert dafür.
   while (fgets(line, sizeof(line), file) && *password_count < MAX_PASSWORDS) // Eine Schleife, welche die file durchläuft solange die Line nicht mehr als 1024 Zeichen enthält und die Password-Liste maximal 1000 Eintraege enthält.
   {
+
     char *newline = strtok(line, "\n"); // Aus der string.h library wird strtok verwendet um den String am Ende einer Zeile zu unterbrechen (Es wird ein '\0' am Ende der Zeile eingefügt und ein Pointer an den Anfang der Zeile zurückgegeben)
     if (newline != NULL)                // Solange die "newline nicht leer ist wird der if-Block ausgeführt"
     {
@@ -29,10 +31,25 @@ void read_passwords(char passwords[][MAX_LINE_LENGTH], int *password_count, cons
 
   fclose(file); // Datei wird geschlossen
 }
-// Diese Funktion durchsucht nun die Logs nach matches für den passwords-Array. Es wird die maximale Zeilenlänge festgelegt und die Anzahl der Passwörter für zu durchsuchende Durchgänge mitgeteilt.
-void search_logs(const char passwords[][MAX_LINE_LENGTH], int password_count)
+
+pthread_mutex_t lock; // Mutex für Thread-Synchronisation
+
+typedef struct
 {
-  FILE *output_file = fopen("leaked.txt", "w"); // Es wird die Datei leaked.txt erstellt oder überschrieben und als output_file festgelegt. "w" steht hier für write.
+  int log_num;
+  const char (*passwords)[MAX_LINE_LENGTH];
+  int password_count;
+  FILE *output_file;
+} ThreadArgs;
+
+void *threaded_search(void *arg)
+{
+  ThreadArgs *args = (ThreadArgs *)arg;
+  int log_num = args->log_num; // Nummer der Log-Datei
+  const char(*passwords)[MAX_LINE_LENGTH] = args->passwords;
+  int password_count = args->password_count;
+
+  FILE *output_file = fopen("Leaks.txt", "w"); // Es wird die Datei Leaks.txt erstellt oder überschrieben und als output_file festgelegt. "w" steht hier für write.
   if (output_file == NULL)                     // Sollte etwas schiefgehen oder die Datei nicht existieren geht es ab in den if-Block
   {
     perror("Could not open output file"); // Error wird in die Konsole geschrieben und Programm mit 1 beendet.
@@ -51,9 +68,13 @@ void search_logs(const char passwords[][MAX_LINE_LENGTH], int password_count)
       continue;                          // Rest wird übersprungen und nächste Iteration begonnen
     }
 
-    char line[MAX_LINE_LENGTH];                 //
-    while (fgets(line, sizeof(line), log_file)) // Wenn die log_file vorhanden ist, wird die Schleife durchlaufen
-    {
+    char line[MAX_LINE_LENGTH]; //
+    while (fgets(line, sizeof(line), log_file))
+    {                                                                        // Wenn die log_file vorhanden ist, wird die Schleife durchlaufen
+      if (strstr(line, "logged") != NULL || strstr(line, "invited") != NULL) // Überspringe Zeilen, die "invited" oder "logged" enthalten.
+      {
+        continue;
+      }
       char *newline = strtok(line, "\n"); // Am Ende der Zeile wird der String für die newline gekappt
       if (newline != NULL)                // newline vorhanden? dann gib ihm
       {
@@ -70,10 +91,13 @@ void search_logs(const char passwords[][MAX_LINE_LENGTH], int password_count)
 
               if (name_end != NULL)
               {
-                char name[name_end - name_start + 1];                                                                     // Differenz der Variablen wird berechnet und eine Stelle für "\0" hinzugefügt um das Ende der Zeichenkette zu markieren
-                strncpy(name, name_start, name_end - name_start);                                                         // name ist das Zielarray, name_Start ist Anfang der Quellzeichenkette und name_end - name_start ergibt die Anzahl der zu kopierenden Zeichen an
-                name[name_end - name_start] = '\0';                                                                       // Das Ende des name-Arrays wird berechnet und das Null-Terminierungszeichen hinzugefügt.
-                fprintf(output_file, "Leak found: %s | Password: %s | Log File: %s\n", name, passwords[j], log_filename); // Wir schreiben in die output_file
+                char name[name_end - name_start + 1];             // Differenz der Variablen wird berechnet und eine Stelle für "\0" hinzugefügt um das Ende der Zeichenkette zu markieren
+                strncpy(name, name_start, name_end - name_start); // name ist das Zielarray, name_Start ist Anfang der Quellzeichenkette und name_end - name_start ergibt die Anzahl der zu kopierenden Zeichen an
+                name[name_end - name_start] = '\0';               // Das Ende des name-Arrays wird berechnet und das Null-Terminierungszeichen hinzugefügt.
+                pthread_mutex_lock(&lock);
+                fprintf(args->output_file, "Leak found: %s | Password: %s | Log File: %s\n", name, passwords[j], log_filename);
+                pthread_mutex_unlock(&lock);
+                ; // Mutex entsperren // Wir schreiben in die output_file
               }
             }
           }
@@ -84,15 +108,44 @@ void search_logs(const char passwords[][MAX_LINE_LENGTH], int password_count)
     fclose(log_file); // log_file wird geschlossen
   }
 
-  fclose(output_file); // output_file wird geschlossen
+  return NULL;
 }
+// Diese Funktion durchsucht nun die Logs nach matches für den passwords-Array. Es wird die maximale Zeilenlänge festgelegt und die Anzahl der Passwörter für zu durchsuchende Durchgänge mitgeteilt.
+void search_logs(char passwords[][MAX_LINE_LENGTH], int password_count)
+{
+  pthread_t threads[5];
+  FILE *output_file = fopen("Leaks.txt", "w");
+  if (output_file == NULL)
+  {
+    perror("Could not open output file");
+    exit(1);
+  }
+
+  ThreadArgs args[5];
+  for (int i = 0; i < 5; i++)
+  {
+    args[i].log_num = i + 1;
+    args[i].passwords = passwords;
+    args[i].password_count = password_count;
+    args[i].output_file = output_file;
+    pthread_create(&threads[i], NULL, threaded_search, &args[i]);
+  }
+  for (int i = 0; i < 5; i++)
+  {
+    pthread_join(threads[i], NULL);
+  }
+  fclose(output_file);
+}
+
 int main() // Startpunkt unseres Programmes. Von hier werden die Funktionen aufgerufen
 {
-  char passwords[MAX_PASSWORDS][MAX_LINE_LENGTH]; // Ein 2D-Char-Array wird erstellt
-  int password_count = 0;                         // Integer-Variable deklariert und mit 0 initialisiert
+  pthread_mutex_init(&lock, NULL);
+  char passwords[MAX_PASSWORDS][MAX_LINE_LENGTH];
+  int password_count = 0;
 
-  read_passwords(passwords, &password_count, "passwords.txt"); // Die Funktion read_passwords wird mit dem leeren passwords-Array, dem password_count und einem filename gefüttert
-  search_logs(passwords, password_count);                      // Die Funktion search_logs wird mit den befüllten Arrays ausgefüllt.
+  read_passwords(passwords, &password_count, "passwords.txt");
+  search_logs(passwords, password_count);
+  pthread_mutex_destroy(&lock);
 
   return 0; // Der Wert 0 wird als "erfolgreich" zurückgegeben und das Programm ist durchlaufen.
 }
