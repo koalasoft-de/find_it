@@ -3,13 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 )
 
 func main() {
-	files, _ := ioutil.ReadDir("./")
+	files, _ := os.ReadDir("./")
 
 	os.Remove("./leaked.txt")
 
