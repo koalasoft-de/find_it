@@ -35,9 +35,8 @@ void read_passwords(char passwords[][MAX_LINE_LENGTH], int *password_count, cons
     char *newline = strtok(line, "\n"); // Aus der string.h library wird strtok verwendet um den String am Ende einer Zeile zu unterbrechen (Es wird ein '\0' am Ende der Zeile eingefügt und ein Pointer an den Anfang der Zeile zurückgegeben)
     if (newline != NULL)                // Solange die "newline nicht leer ist wird der if-Block ausgeführt"
     {
-      strcpy(passwords[*password_count], newline);               // Das Passwort wird von der newline in den password_count kopiert. Wobei der Iterator den Pointer stellt um die richtige Stelle im Array zu finden.
-      printf("Read password: %s\n", passwords[*password_count]); // Ausgabe in die Konsole
-      (*password_count)++;                                       // Iteration
+      strcpy(passwords[*password_count], newline); // Das Passwort wird von der newline in den password_count kopiert. Wobei der Iterator den Pointer stellt um die richtige Stelle im Array zu finden.
+      (*password_count)++;                         // Iteration
     }
   }
 
@@ -151,11 +150,10 @@ int main() // Startpunkt unseres Programmes. Von hier werden die Funktionen aufg
   char passwords[MAX_PASSWORDS][MAX_LINE_LENGTH];
   int password_count = 0;
   int leak_count = 0;
-  char *leaks = malloc(5 * 128);
+  char *leaks = malloc(20 * 128);
 
   read_passwords(passwords, &password_count, "passwords.txt");
   search_logs(passwords, password_count, leaks, &leak_count);
-  printf("leak_count %d password_count %d", leak_count, password_count);
 
   FILE *output_file = fopen("Leaks.txt", "a");
   for (int i = 0; i < leak_count; i++)
