@@ -38,7 +38,7 @@ func main() {
 		lines += <-c
 	}
 
-	fmt.Printf("Scanned %v lines", lines)
+	fmt.Printf("Scanned %v lines\n", lines)
 }
 
 func scanLog(c chan int, file string, out *os.File, passwords []string) {
