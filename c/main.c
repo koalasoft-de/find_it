@@ -50,7 +50,7 @@ void *threaded_search(void *arg) // Der Datentyp welcher Übergeben oder zurück
   const char(*passwords)[MAX_LINE_LENGTH] = args->passwords;
   int password_count = args->password_count;
 
-  FILE *output_file = fopen("Leaks.txt", "w"); // Es wird die Datei Leaks.txt erstellt oder überschrieben und als output_file festgelegt. "w" steht hier für write.
+  FILE *output_file = fopen("leaked.txt", "w"); // Es wird die Datei Leaks.txt erstellt oder überschrieben und als output_file festgelegt. "w" steht hier für write.
   if (output_file == NULL)                     // Sollte etwas schiefgehen oder die Datei nicht existieren geht es ab in den if-Block
   {
     perror("Could not open output file"); // Error wird in die Konsole geschrieben und Programm mit 1 beendet.
@@ -116,7 +116,7 @@ void *threaded_search(void *arg) // Der Datentyp welcher Übergeben oder zurück
 void search_logs(char passwords[][MAX_LINE_LENGTH], int password_count, char *leaks, int *leak_count)
 {
   pthread_t threads[5];
-  FILE *output_file = fopen("Leaks.txt", "w");
+  FILE *output_file = fopen("leaked.txt", "w");
   if (output_file == NULL)
   {
     perror("Could not open output file");
@@ -153,7 +153,7 @@ int main() // Startpunkt unseres Programmes. Von hier werden die Funktionen aufg
   read_passwords(passwords, &password_count, "passwords.txt");
   search_logs(passwords, password_count, leaks, &leak_count);
 
-  FILE *output_file = fopen("Leaks.txt", "a");
+  FILE *output_file = fopen("leaked.txt", "a");
   for (int i = 0; i < leak_count; i++)
   {
     char *line = (char *)(leaks + i * 128);
