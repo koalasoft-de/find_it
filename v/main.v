@@ -1,3 +1,4 @@
+import io
 import os
 
 const (
@@ -13,40 +14,53 @@ fn main() {
 
 	os.create(leaked_file)!
 
-	mut out    := os.open_append(leaked_file)!
-	mut buffer := []u8{len: 256}
+	mut out     := os.open_append(leaked_file)!
+	mut threads := []thread{}
+	mut lines   := unsafe { &u32(malloc(4)) }
  
-	for f in os.ls('./')! {
-		mut log := os.open(f)!
+	for file in os.ls('./')! {
 
-		if !f.contains('log.') {
+		if !file.contains('log.') {
 			continue
 		}
 
-		for {
-			if log.read_bytes_into_newline(mut buffer)! > 0 {
-		 
-				for pw in passwords {
-					line := buffer.bytestr()
- 
-					if line.contains(pw) {
-						i1 := line.index(': ')? + 2
-		 				i2 := line.index_after('failed', i1) - 1
- 
-						res := 'Leak found: ${line.substr(i1, i2)} | Password: ${pw} | Log File: ${f}'
-
-						println(res)
-
-						out.writeln(res)!
-					}
-				}
-			} else {
-				break
-			}
-		}
-
-		log.close()
+		threads << spawn scan_log(mut &out, file, passwords, lines)
 	}
 
+  threads.wait()
+
+  print('Scanned ${*lines} lines')
+
 	out.close()
+}
+
+fn scan_log(mut out os.File, file string, passwords []string, lines &u32) {
+
+	mut log := io.new_buffered_reader(
+		reader: os.open(file) or { panic(err) }
+	)
+  
+	mut local_lines := u32(0)
+
+	for {
+		line := log.read_line() or { break } 
+
+		local_lines++
+		
+		for pw in passwords {
+
+			if line.index_after(pw, 0) > -1 {
+				i1 := line.index(': ') or { panic(err) } + 2
+				i2 := line.index_after('failed', i1) - 1
+
+				res := 'Leak found: ${line.substr(i1, i2)} | Password: ${pw} | Log File: ${file}'
+
+				println(res)
+
+				out.writeln(res) or { panic(err) }
+			}
+		}
+	}
+
+	(*lines) += local_lines;
 }
