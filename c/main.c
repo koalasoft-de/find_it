@@ -95,7 +95,9 @@ void *threaded_search(void *arg) // Der Datentyp welcher Übergeben oder zurück
               name[name_end - name_start] = '\0';               // Das Ende des name-Arrays wird berechnet und das Null-Terminierungszeichen hinzugefügt.
                                                                 // pthread_mutex_lock(&lock);
 
+
               sprintf(args->leaks, "Leak found: %s | Password: %s | Log File: %s\n", name, passwords[j], log_filename); // Threadhandling, damit nur 1 Thread gleichzeitig in output schreibt
+              printf("%s", args->leaks);
                                                                                                                         //  printf("%p -> %s\n--\n", args->leaks, args->leaks);                                                       // Threadhandling, damit nur 1 Thread gleichzeitig in output schreibt
                                                                                                                         // snprintf(args->leaks[*(args->leak_count)], MAX_LINE_LENGTH, "Leak found: %s | Password: %s | Log File: %s\n", name, passwords[j], log_filename); // snprintf() nutzt einen begrenzten Buffer mit Formatierer um nicht in einen Buffer-Overflow zu geraten und schreibt in leaks
               (*args->leak_count)++;                                                                                    // Iteration für leak_count
@@ -157,7 +159,7 @@ int main() // Startpunkt unseres Programmes. Von hier werden die Funktionen aufg
   for (int i = 0; i < leak_count; i++)
   {
     char *line = (char *)(leaks + i * 128);
-    printf("%s", line);
+    
     fprintf(output_file, "%s", line);
   }
   fclose(output_file);

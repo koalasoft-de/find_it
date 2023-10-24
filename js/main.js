@@ -19,8 +19,18 @@ for (const file of await readdir('./')) {
 
       for (const pw of passwords) {
 
+        if (!pw) {
+          continue;
+        }
+
         if (line.includes(pw)) {
-          await leakedFile.write(line + '\n');
+          const i1  = line.indexOf(': ') + 2,
+				        i2  = line.indexOf('failed', i1) - 1,
+                res = `Leak found: ${line.substring(i1, i2)} | Password: ${pw} | Log File: ${file}`;
+
+          console.log(res);
+
+          await leakedFile.write(res + '\n');
         }
       }
     }
