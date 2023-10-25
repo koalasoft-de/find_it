@@ -1,5 +1,6 @@
 v/main
 c/main
 go/main
+rs/main
 *.out
 leaked.txt
